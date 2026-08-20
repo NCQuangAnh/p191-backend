@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: p191-telemetry
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/telemetry}
+    username: ${SPRING_DATASOURCE_USERNAME:p191}
+    password: ${SPRING_DATASOURCE_PASSWORD:p191pass}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    show-sql: false
+
+server:
+  port: ${PORT:8080}
+
+app:
+  security:
+    jwt:
+      # HS256: bí mật phải >= 32 byte. ĐỔI ở production (dùng biến môi trường APP_SECURITY_JWT_SECRET).
+      secret: "/yEi95dlz/rGdt5k+1NLgA4O4bphjOu9kgNAPI8SZKVaSPYev5GnxAJwUbP205mX"
+      ttl-seconds: 3600
+    # Khóa app khách gửi kèm header X-Api-Key khi ghi heartbeat/event.
+    device-api-key: "dev-device-key-doi-o-production"
+  admin:
+    username: "admin"
+    password: "admin123"   # ĐỔI ngay ở production
+  device:
+    # lastSeen còn trong ngưỡng này (giây) thì coi là online.
+    online-threshold-seconds: 120
+
+logging:
+  level:
+    root: INFO

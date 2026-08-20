@@ -1,0 +1,43 @@
+### === LUỒNG GHI (app khách) — cần header X-Api-Key ===
+
+### Heartbeat
+POST http://localhost:8080/device/heartbeat
+Content-Type: application/json
+X-Api-Key: dev-device-key-doi-o-production
+
+{
+  "deviceId": "pixel-8-abc123",
+  "model": "Pixel 8",
+  "appVersion": "1.0.0"
+}
+
+### Log event (xử lý xong 1 tin nhắn)
+POST http://localhost:8080/event/logEvent
+Content-Type: application/json
+X-Api-Key: dev-device-key-doi-o-production
+
+{
+  "deviceId": "pixel-8-abc123",
+  "category": "spam",
+  "latencyMs": 320,
+  "hasError": false
+}
+
+### === LUỒNG ĐỌC (admin) — cần JWT ===
+
+### 1) Login lấy token
+POST http://localhost:8080/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+### 2) Danh sách device (thay <TOKEN> bằng token ở bước trên)
+GET http://localhost:8080/device/list
+Authorization: Bearer <TOKEN>
+
+### 3) Danh sách event (có lọc + phân trang)
+GET http://localhost:8080/event/listEvents?page=0&size=50&hasError=false
+Authorization: Bearer <TOKEN>
