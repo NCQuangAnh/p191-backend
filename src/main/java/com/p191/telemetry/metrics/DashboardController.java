@@ -52,6 +52,14 @@ public class DashboardController {
         return buttons.aggregatePressesByDevice();
     }
 
+    // 7 ngay gan nhat - ve bieu do cot + tinh % so voi hom qua (yeu cau
+    // nguoi dung 22/08).
+    @GetMapping("/stats/buttons/daily")
+    public List<ButtonEventRepository.ButtonPressDailyAgg> buttonStatsDaily() {
+        Instant since = Instant.now().minusSeconds(7L * 24 * 3600);
+        return buttons.aggregatePressesDaily(since);
+    }
+
     @GetMapping("/stats/errors")
     public List<ErrorEventRepository.ErrorAgg> errorStats() { return errors.aggregate(); }
 

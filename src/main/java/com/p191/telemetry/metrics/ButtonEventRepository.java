@@ -2,6 +2,8 @@ package com.p191.telemetry.metrics;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import java.time.Instant;
 import java.util.List;
 
 public interface ButtonEventRepository extends JpaRepository<ButtonEvent, Long> {
@@ -17,6 +19,15 @@ public interface ButtonEventRepository extends JpaRepository<ButtonEvent, Long> 
             "from ButtonEvent b group by b.deviceId, b.buttonCode order by b.deviceId, b.buttonCode")
     List<ButtonPressByDeviceAgg> aggregatePressesByDevice();
 
+    // Tong luot bam theo TUNG NGAY + tung nut, N ngay gan nhat - de ve bieu
+    // do cot theo ngay va tinh % chenh lech so voi hom qua (yeu cau nguoi
+    // dung 22/08 - man "Lượt Bấm" kieu bar chart theo ngay).
+    @Query(value = "select date(received_at) as day, button_code as code, sum(press_count) as presses " +
+            "from button_events where received_at >= :since group by date(received_at), button_code order by day, code",
+            nativeQuery = true)
+    List<ButtonPressDailyAgg> aggregatePressesDaily(@Param("since") Instant since);
+
     interface ButtonPressAgg { Integer getCode(); Long getPresses(); }
     interface ButtonPressByDeviceAgg { String getDeviceId(); Integer getCode(); Long getPresses(); }
+    interface ButtonPressDailyAgg { java.sql.Date getDay(); Integer getCode(); Long getPresses(); }
 }
