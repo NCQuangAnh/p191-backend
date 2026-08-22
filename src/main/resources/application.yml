@@ -32,6 +32,14 @@ app:
   device:
     # lastSeen còn trong ngưỡng này (giây) thì coi là online.
     online-threshold-seconds: 120
+  google:
+    # Key Google Places (New) + Cloud TTS - trước đây bundle thẳng trong APK
+    # (lib/config/secrets.dart phía Flutter), đổi sang giữ ở backend + gọi
+    # qua proxy (xem metrics.ProxyController) để không lộ key khi decompile
+    # app. Set qua biến môi trường GOOGLE_PLACES_API_KEY/GOOGLE_TTS_API_KEY
+    # trên Render, KHÔNG hardcode giá trị thật ở đây.
+    places-api-key: ${GOOGLE_PLACES_API_KEY:}
+    tts-api-key: ${GOOGLE_TTS_API_KEY:}
 
 logging:
   level:
