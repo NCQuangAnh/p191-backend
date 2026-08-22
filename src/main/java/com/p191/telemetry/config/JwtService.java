@@ -1,4 +1,4 @@
-package com.p191.telemetry.security;
+package com.p191.telemetry.config;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

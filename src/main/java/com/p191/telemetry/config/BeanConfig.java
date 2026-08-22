@@ -1,4 +1,4 @@
-package com.p191.telemetry.security;
+package com.p191.telemetry.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

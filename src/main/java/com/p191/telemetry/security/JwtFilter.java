@@ -1,5 +1,6 @@
 package com.p191.telemetry.security;
 
+import com.p191.telemetry.config.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

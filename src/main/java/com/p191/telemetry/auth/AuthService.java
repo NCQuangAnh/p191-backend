@@ -2,7 +2,7 @@ package com.p191.telemetry.auth;
 
 import com.p191.telemetry.audit.AuditAction;
 import com.p191.telemetry.audit.AuditService;
-import com.p191.telemetry.security.JwtService;
+import com.p191.telemetry.config.JwtService;
 import com.p191.telemetry.security.UserPrincipal;
 import com.p191.telemetry.user.*;
 import org.springframework.http.HttpStatus;

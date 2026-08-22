@@ -21,7 +21,8 @@ public class SecurityConfig {
     private final JwtFilter jwtFilter;
 
     public SecurityConfig(AuthenticationProvider authenticationProvider, JwtFilter jwtFilter) {
-        this.authenticationProvider = authenticationProvider; this.jwtFilter = jwtFilter;
+        this.authenticationProvider = authenticationProvider;
+        this.jwtFilter = jwtFilter;
     }
 
     @Bean
@@ -31,7 +32,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(reg -> reg
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/telemetry/**").permitAll()             // ⚠️ ĐỔI thành path device X-Api-Key THẬT của bạn
+                        .requestMatchers("/api/telemetry/**").permitAll()
                         .requestMatchers("/api/admin/users/**").hasRole("SUPER_ADMIN")
                         .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                         .requestMatchers("/api/driver/**").hasAnyRole("DRIVER", "ADMIN", "SUPER_ADMIN")

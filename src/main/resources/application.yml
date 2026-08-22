@@ -7,9 +7,14 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD:p191pass}
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     open-in-view: false
-    show-sql: false
+
+    liquibase:
+      change-log: classpath:db/changelog/db.changelog-master.yaml
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
 
 server:
   port: ${PORT:8080}

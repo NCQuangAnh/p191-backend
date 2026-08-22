@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-baseline
+      author: le
+      changes:
+        - sqlFile:
+            path: baseline.sql
+            relativeToChangelogFile: true
+            splitStatements: true
+            stripComments: true
+            endDelimiter: ";"
