@@ -9,3 +9,6 @@ databaseChangeLog:
             splitStatements: true
             stripComments: true
             endDelimiter: ";"
+  - include:
+      file: 002-google-auth.yaml
+      relativeToChangelogFile: true

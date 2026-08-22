@@ -12,8 +12,11 @@ public class User {
     @Column(nullable = false, unique = true, length = 100)
     private String username;
 
-    @Column(nullable = false, length = 255)
-    private String password;     // BCrypt hash, không bao giờ lưu plaintext
+    @Column(length = 255)
+    private String password;     // BCrypt hash; NULL nếu user chỉ đăng nhập bằng Google
+
+    @Column(name = "google_id", unique = true, length = 255)
+    private String googleId;     // "sub" claim của Google ID token; NULL nếu đăng nhập username/password
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "role_id", nullable = false)
@@ -31,6 +34,8 @@ public class User {
     public void setUsername(String u) { this.username = u; }
     public String getPassword() { return password; }
     public void setPassword(String p) { this.password = p; }
+    public String getGoogleId() { return googleId; }
+    public void setGoogleId(String g) { this.googleId = g; }
     public Role getRole() { return role; }
     public void setRole(Role r) { this.role = r; }
     public boolean isEnabled() { return enabled; }

@@ -40,6 +40,10 @@ app:
     # trên Render, KHÔNG hardcode giá trị thật ở đây.
     places-api-key: ${GOOGLE_PLACES_API_KEY:}
     tts-api-key: ${GOOGLE_TTS_API_KEY:}
+    # Web Client ID (KHÔNG phải Android client ID) từ Google Cloud Console —
+    # audience của ID token do app Android phát ra luôn là Web client ID.
+    # Set qua GOOGLE_OAUTH_CLIENT_ID trên Render.
+    oauth-client-id: ${GOOGLE_OAUTH_CLIENT_ID:}
 
 logging:
   level:

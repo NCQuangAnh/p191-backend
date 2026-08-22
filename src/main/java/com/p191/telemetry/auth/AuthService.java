@@ -1,10 +1,15 @@
 package com.p191.telemetry.auth;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
 import com.p191.telemetry.audit.AuditAction;
 import com.p191.telemetry.audit.AuditService;
 import com.p191.telemetry.config.JwtService;
 import com.p191.telemetry.security.UserPrincipal;
 import com.p191.telemetry.user.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.AuthenticationException;
@@ -12,6 +17,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.security.GeneralSecurityException;
+import java.util.Collections;
 
 @Service
 public class AuthService {
@@ -22,6 +30,11 @@ public class AuthService {
     private final JwtService jwt;
     private final AuthenticationManager authManager;
     private final AuditService audit;
+
+    @Value("${app.google.oauth-client-id:}")
+    private String googleClientId;
+
+    private GoogleIdTokenVerifier googleVerifier;
 
     public AuthService(UserRepository users, RoleRepository roles, PasswordEncoder encoder,
                        JwtService jwt, AuthenticationManager authManager, AuditService audit) {
@@ -60,5 +73,66 @@ public class AuthService {
         String role = u.getRole().getName().name();
         audit.record(u.getUsername(), AuditAction.LOGIN_SUCCESS, null, "role=" + role, ip);
         return new AuthResponse(jwt.generateToken(UserPrincipal.fromUser(u)), u.getUsername(), role);
+    }
+
+    /**
+     * Đăng nhập/đăng ký bằng Google ID token. Verify chữ ký + audience (client ID)
+     * qua GoogleIdTokenVerifier — KHÔNG tin payload chưa verify. User mới luôn ép
+     * DRIVER, giống register() thường. Lần đầu login gắn google_id vào user có
+     * cùng email (username) nếu đã tồn tại, để không tạo trùng tài khoản.
+     */
+    @Transactional
+    public AuthResponse loginWithGoogle(GoogleLoginRequest req, String ip) {
+        if (googleClientId.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                    "GOOGLE_OAUTH_CLIENT_ID chưa được cấu hình trên server");
+        }
+        GoogleIdToken.Payload payload = verifyGoogleToken(req.idToken());
+        String googleId = payload.getSubject();
+        Boolean emailVerified = payload.getEmailVerified();
+        String email = Boolean.TRUE.equals(emailVerified) ? payload.getEmail() : null;
+
+        User u = users.findByGoogleId(googleId).orElse(null);
+        if (u == null && email != null) {
+            u = users.findByUsername(email).orElse(null);
+            if (u != null) u.setGoogleId(googleId);
+        }
+        if (u == null) {
+            if (email == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token Google thiếu email");
+            }
+            Role driver = roles.findByName(RoleName.DRIVER)
+                    .orElseThrow(() -> new IllegalStateException("Thiếu role DRIVER — seeder chưa chạy"));
+            u = new User();
+            u.setUsername(email);
+            u.setGoogleId(googleId);
+            u.setPassword(null);
+            u.setRole(driver);
+            audit.record(email, AuditAction.REGISTER, email, "role=DRIVER, via=google", ip);
+        }
+        users.save(u);
+        String role = u.getRole().getName().name();
+        audit.record(u.getUsername(), AuditAction.LOGIN_SUCCESS, null, "role=" + role + ", via=google", ip);
+        return new AuthResponse(jwt.generateToken(UserPrincipal.fromUser(u)), u.getUsername(), role);
+    }
+
+    private GoogleIdToken.Payload verifyGoogleToken(String idTokenString) {
+        if (idTokenString == null || idTokenString.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Thiếu idToken");
+        }
+        try {
+            if (googleVerifier == null) {
+                googleVerifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), GsonFactory.getDefaultInstance())
+                        .setAudience(Collections.singletonList(googleClientId))
+                        .build();
+            }
+            GoogleIdToken token = googleVerifier.verify(idTokenString);
+            if (token == null) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Google ID token không hợp lệ");
+            }
+            return token.getPayload();
+        } catch (GeneralSecurityException | java.io.IOException e) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Không verify được Google ID token");
+        }
     }
 }

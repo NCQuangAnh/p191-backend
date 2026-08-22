@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-google-auth
+      author: le
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: google_id
+                  type: varchar(255)
+                  constraints:
+                    unique: true
+                    nullable: true
+        - dropNotNullConstraint:
+            tableName: users
+            columnName: password
+            columnDataType: varchar(255)

@@ -17,6 +17,10 @@ public class AuthController {
     public AuthResponse login(@RequestBody LoginRequest req, HttpServletRequest http) {
         return auth.login(req, clientIp(http));
     }
+    @PostMapping("/google")
+    public AuthResponse google(@RequestBody GoogleLoginRequest req, HttpServletRequest http) {
+        return auth.loginWithGoogle(req, clientIp(http));
+    }
     private static String clientIp(HttpServletRequest req) {
         String xff = req.getHeader("X-Forwarded-For");
         if (xff != null && !xff.isBlank()) return xff.split(",")[0].trim();
