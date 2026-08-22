@@ -23,7 +23,7 @@ app:
   security:
     jwt:
       secret: ${APP_SECURITY_JWT_SECRET:ZGV2LWxvY2FsLXNlY3JldC1kby1ub3QtdXNlLTEyMzQ1Njc4}
-      ttl-seconds: 3600
+      ttl-seconds: 2592000   # 30 ngay - tang tu 3600 (1 tieng), tranh phai dang nhap lai lien tuc luc test
     # Khóa app khách gửi kèm header X-Api-Key khi ghi heartbeat/event.
     device-api-key: "dev-device-key-doi-o-production"
   # DataSeeder.java doc key nay (khong phai "app.admin.*" - lech ten khien
