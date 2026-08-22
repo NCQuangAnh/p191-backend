@@ -45,6 +45,13 @@ public class DashboardController {
     @GetMapping("/stats/buttons")
     public List<ButtonEventRepository.ButtonPressAgg> buttonStats() { return buttons.aggregatePresses(); }
 
+    // Tach theo tung may (deviceId) - de tinh trung binh moi user dung nut
+    // nao bao nhieu lan/ngay (yeu cau nguoi dung 22/08).
+    @GetMapping("/stats/buttons/by-device")
+    public List<ButtonEventRepository.ButtonPressByDeviceAgg> buttonStatsByDevice() {
+        return buttons.aggregatePressesByDevice();
+    }
+
     @GetMapping("/stats/errors")
     public List<ErrorEventRepository.ErrorAgg> errorStats() { return errors.aggregate(); }
 
