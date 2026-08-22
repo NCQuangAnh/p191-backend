@@ -7,7 +7,7 @@ import java.util.List;
 @Service
 public class TripReadService {
     private final TripRepository trips;
-    public TripReadService(TripRepository trips) { this.trips = trips; }
+    public TripReadService(TripRepository trips) { this.trips = trips; } //
 
     @Transactional(readOnly = true)
     public List<TripView> recentTrips() {
