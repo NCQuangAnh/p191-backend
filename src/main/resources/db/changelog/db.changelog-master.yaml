@@ -12,3 +12,6 @@ databaseChangeLog:
   - include:
       file: 002-google-auth.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 003-pipeline-latency.yaml
+      relativeToChangelogFile: true

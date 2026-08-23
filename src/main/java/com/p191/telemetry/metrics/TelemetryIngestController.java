@@ -14,15 +14,18 @@ public class TelemetryIngestController {
     private final ButtonEventRepository buttons;
     private final ErrorEventRepository errors;
     private final MessageClassificationRepository classifications;
+    private final PipelineLatencyRepository pipelineLatency;
 
     public TelemetryIngestController(HeartbeatRepository heartbeats, TripService tripService,
                                      SosEventRepository sosEvents, ButtonEventRepository buttons,
                                      ErrorEventRepository errors,
-                                     MessageClassificationRepository classifications) {
+                                     MessageClassificationRepository classifications,
+                                     PipelineLatencyRepository pipelineLatency) {
         this.heartbeats = heartbeats; this.tripService = tripService; this.sosEvents = sosEvents;
         this.buttons = buttons;
         this.errors = errors;
         this.classifications = classifications;
+        this.pipelineLatency = pipelineLatency;
     }
 
     @PostMapping("/heartbeat")
@@ -59,5 +62,11 @@ public class TelemetryIngestController {
     @ResponseStatus(HttpStatus.ACCEPTED)
     public void classifications(@RequestBody List<ClassificationRequest> batch) {
         classifications.saveAll(batch.stream().map(MessageClassification::from).toList());
+    }
+
+    @PostMapping("/pipeline-latency")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public void pipelineLatency(@RequestBody List<PipelineLatencyRequest> batch) {
+        pipelineLatency.saveAll(batch.stream().map(PipelineLatencyEvent::from).toList());
     }
 }
