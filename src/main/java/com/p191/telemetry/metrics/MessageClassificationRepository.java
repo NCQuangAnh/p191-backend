@@ -13,9 +13,14 @@ public interface MessageClassificationRepository extends JpaRepository<MessageCl
     List<CategoryAgg> categoryDistribution();
 
     // So tin nhan theo tung gio trong ngay, N gio gan nhat - ve bieu do
-    // "Luu luong tin nhan 24h" (yeu cau nguoi dung 23/08).
-    @Query(value = "select extract(hour from received_at) as hour, count(*) as cnt " +
-            "from message_classifications where received_at >= :since group by extract(hour from received_at)",
+    // "Luu luong tin nhan 24h" (yeu cau nguoi dung 23/08). AT TIME ZONE
+    // 'Asia/Ho_Chi_Minh' - received_at luu UTC (Instant.now()), khong doi
+    // mui gio thi extract(hour) tra ve gio UTC, lech 7 tieng so voi gio VN
+    // hien tren app (xac nhan thuc te 24/08: test luc 00h VN, app hien
+    // 12h - lech dung 7-8 tieng do bucket 3 gio).
+    @Query(value = "select extract(hour from received_at AT TIME ZONE 'Asia/Ho_Chi_Minh') as hour, count(*) as cnt " +
+            "from message_classifications where received_at >= :since " +
+            "group by extract(hour from received_at AT TIME ZONE 'Asia/Ho_Chi_Minh')",
             nativeQuery = true)
     List<HourCountAgg> messagesPerHour(@Param("since") Instant since);
 

@@ -31,9 +31,13 @@ public interface TripRepository extends JpaRepository<Trip, String> {   // khoá
             "sum(t.summaryGuardrailBlockedCount) as summaryGuardrailBlocked from Trip t")
     SummaryQualityAgg summaryQuality();
 
-    // So chuyen bat dau theo tung gio trong ngay, N gio gan nhat.
-    @Query(value = "select extract(hour from started_at) as hour, count(*) as cnt " +
-            "from trips where started_at >= :since group by extract(hour from started_at)",
+    // So chuyen bat dau theo tung gio trong ngay, N gio gan nhat. AT TIME
+    // ZONE 'Asia/Ho_Chi_Minh' - started_at luu UTC, doi ve gio VN truoc khi
+    // extract (xem ghi chu tai MessageClassificationRepository.messagesPerHour,
+    // cung 1 bug lech 7 tieng, sua chung dot 24/08).
+    @Query(value = "select extract(hour from started_at AT TIME ZONE 'Asia/Ho_Chi_Minh') as hour, count(*) as cnt " +
+            "from trips where started_at >= :since " +
+            "group by extract(hour from started_at AT TIME ZONE 'Asia/Ho_Chi_Minh')",
             nativeQuery = true)
     List<HourCountAgg> tripsPerHour(@Param("since") Instant since);
 
