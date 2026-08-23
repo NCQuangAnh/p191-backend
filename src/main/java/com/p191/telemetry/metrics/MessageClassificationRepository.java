@@ -19,6 +19,11 @@ public interface MessageClassificationRepository extends JpaRepository<MessageCl
             nativeQuery = true)
     List<HourCountAgg> messagesPerHour(@Param("since") Instant since);
 
+    // Danh sach tho (category + receivedAt) - man "Chi tiết nhãn tin nhắn"
+    // ben admin tu loc theo ngay + ve pie chart client-side (yeu cau nguoi
+    // dung 23/08).
+    List<MessageClassification> findTop500ByOrderByReceivedAtDesc();
+
     interface CategoryAgg { String getCategory(); Long getTotal(); Long getImportantCount(); }
     interface HourCountAgg { Number getHour(); Long getCnt(); }
 }

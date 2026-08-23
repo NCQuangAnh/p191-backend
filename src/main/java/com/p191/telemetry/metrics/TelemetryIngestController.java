@@ -15,17 +15,20 @@ public class TelemetryIngestController {
     private final ErrorEventRepository errors;
     private final MessageClassificationRepository classifications;
     private final PipelineLatencyRepository pipelineLatency;
+    private final ReplyHistoryRepository replyHistory;
 
     public TelemetryIngestController(HeartbeatRepository heartbeats, TripService tripService,
                                      SosEventRepository sosEvents, ButtonEventRepository buttons,
                                      ErrorEventRepository errors,
                                      MessageClassificationRepository classifications,
-                                     PipelineLatencyRepository pipelineLatency) {
+                                     PipelineLatencyRepository pipelineLatency,
+                                     ReplyHistoryRepository replyHistory) {
         this.heartbeats = heartbeats; this.tripService = tripService; this.sosEvents = sosEvents;
         this.buttons = buttons;
         this.errors = errors;
         this.classifications = classifications;
         this.pipelineLatency = pipelineLatency;
+        this.replyHistory = replyHistory;
     }
 
     @PostMapping("/heartbeat")
@@ -68,5 +71,13 @@ public class TelemetryIngestController {
     @ResponseStatus(HttpStatus.ACCEPTED)
     public void pipelineLatency(@RequestBody List<PipelineLatencyRequest> batch) {
         pipelineLatency.saveAll(batch.stream().map(PipelineLatencyEvent::from).toList());
+    }
+
+    // Chi app gui khi tra loi tin THANH CONG (xem ghi chu ReplyHistoryEvent) -
+    // khong co "that bai" nao duoc gui len day.
+    @PostMapping("/reply-history")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public void replyHistory(@RequestBody List<ReplyHistoryRequest> batch) {
+        replyHistory.saveAll(batch.stream().map(ReplyHistoryEvent::from).toList());
     }
 }

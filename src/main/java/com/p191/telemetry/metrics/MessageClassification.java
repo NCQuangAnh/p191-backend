@@ -18,4 +18,9 @@ public class MessageClassification {
         c.deviceId=r.deviceId(); c.category=r.category(); c.isImportant=r.isImportant();
         return c;
     }
+
+    public Long getId() { return id; }
+    public String getCategory() { return category; }
+    public Boolean getIsImportant() { return isImportant; }
+    public Instant getReceivedAt() { return receivedAt; }
 }

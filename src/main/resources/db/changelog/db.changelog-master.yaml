@@ -15,3 +15,6 @@ databaseChangeLog:
   - include:
       file: 003-pipeline-latency.yaml
       relativeToChangelogFile: true
+  - include:
+      file: 004-reply-history.yaml
+      relativeToChangelogFile: true

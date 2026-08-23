@@ -1,0 +1,55 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-reply-history
+      author: claude
+      changes:
+        - createTable:
+            tableName: reply_history_events
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: device_id
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: device_model
+                  type: varchar(128)
+              - column:
+                  name: driver_id
+                  type: varchar(64)
+              - column:
+                  name: app_version
+                  type: varchar(32)
+              - column:
+                  name: reply_type
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_ms
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: received_at
+                  type: timestamp(6) with time zone
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: ix_reply_history_received
+            tableName: reply_history_events
+            columns:
+              - column:
+                  name: received_at
+        - createIndex:
+            indexName: ix_reply_history_type
+            tableName: reply_history_events
+            columns:
+              - column:
+                  name: reply_type

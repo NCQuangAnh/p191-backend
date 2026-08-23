@@ -17,17 +17,19 @@ public class DashboardController {
     private final MessageClassificationRepository classifications;
     private final TripRepository trips;
     private final PipelineLatencyRepository pipelineLatency;
+    private final ReplyHistoryRepository replyHistory;
 
     public DashboardController(HeartbeatRepository heartbeats, TripReadService tripRead,
                                SosEventRepository sosEvents, ButtonEventRepository buttons, ErrorEventRepository errors,
                                MessageClassificationRepository classifications, TripRepository trips,
-                               PipelineLatencyRepository pipelineLatency) {
+                               PipelineLatencyRepository pipelineLatency, ReplyHistoryRepository replyHistory) {
         this.heartbeats = heartbeats; this.tripRead = tripRead; this.sosEvents = sosEvents;
         this.buttons = buttons;
         this.errors = errors;
         this.classifications = classifications;
         this.trips = trips;
         this.pipelineLatency = pipelineLatency;
+        this.replyHistory = replyHistory;
     }
 
     @GetMapping("/active-now")
@@ -74,6 +76,13 @@ public class DashboardController {
         return classifications.categoryDistribution();
     }
 
+    // Danh sach tho de man "Chi tiết nhãn tin nhắn" loc theo ngay + ve pie
+    // chart (yeu cau nguoi dung 23/08).
+    @GetMapping("/stats/categories/raw")
+    public List<MessageClassification> categoryStatsRaw() {
+        return classifications.findTop500ByOrderByReceivedAtDesc();
+    }
+
     // "Luu luong tin nhan 24h" - so tin + so chuyen theo tung gio, gop tu 2
     // nguon that (message_classifications + trips), khong con mock (yeu cau
     // nguoi dung 23/08).
@@ -106,5 +115,17 @@ public class DashboardController {
                 "latency", pipelineLatency.averageLatency(),
                 "summaryQuality", trips.summaryQuality()
         );
+    }
+
+    // Do tre trung binh "Tu soan" vs "Goi y tra loi" - man "Lich su" ben
+    // admin (yeu cau nguoi dung 23/08).
+    @GetMapping("/stats/reply-history/summary")
+    public List<ReplyHistoryRepository.ReplyTypeAvgAgg> replyHistorySummary() {
+        return replyHistory.averageByType();
+    }
+
+    @GetMapping("/stats/reply-history/detail")
+    public List<ReplyHistoryEvent> replyHistoryDetail() {
+        return replyHistory.findTop200ByOrderByReceivedAtDesc();
     }
 }
