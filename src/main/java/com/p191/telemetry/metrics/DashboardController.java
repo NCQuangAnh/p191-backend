@@ -51,7 +51,8 @@ public class DashboardController {
     // đi hợp lệ" tren Dashboard web (yeu cau nguoi dung 24/08).
     @GetMapping("/stats/trip-count")
     public Map<String, Object> tripCount(@RequestParam(required = false) Integer days) {
-        return Map.of("count", trips.countSince(sinceDays(days)));
+        Instant since = sinceDays(days);
+        return Map.of("count", since == null ? trips.count() : trips.countSince(since));
     }
 
     @GetMapping("/sos")
@@ -65,7 +66,8 @@ public class DashboardController {
 
     @GetMapping("/stats/buttons")
     public List<ButtonEventRepository.ButtonPressAgg> buttonStats(@RequestParam(required = false) Integer days) {
-        return buttons.aggregatePressesSince(sinceDays(days));
+        Instant since = sinceDays(days);
+        return since == null ? buttons.aggregatePresses() : buttons.aggregatePressesSince(since);
     }
 
     // Tach theo tung may (deviceId) - de tinh trung binh moi user dung nut
@@ -88,7 +90,8 @@ public class DashboardController {
 
     @GetMapping("/stats/categories")
     public List<MessageClassificationRepository.CategoryAgg> categoryStats(@RequestParam(required = false) Integer days) {
-        return classifications.categoryDistributionSince(sinceDays(days));
+        Instant since = sinceDays(days);
+        return since == null ? classifications.categoryDistribution() : classifications.categoryDistributionSince(since);
     }
 
     // Danh sach tho de man "Chi tiết nhãn tin nhắn" loc theo ngay + ve pie
@@ -115,8 +118,9 @@ public class DashboardController {
     // (yeu cau nguoi dung 23/08, thay the du lieu mock tripBehavior).
     @GetMapping("/stats/funnel")
     public Map<String, Object> funnelStats(@RequestParam(required = false) Integer days) {
+        Instant since = sinceDays(days);
         return Map.of(
-                "summary", trips.fleetFunnelSince(sinceDays(days)),
+                "summary", since == null ? trips.fleetFunnel() : trips.fleetFunnelSince(since),
                 "channels", trips.fleetChannelStats()
         );
     }
@@ -128,8 +132,8 @@ public class DashboardController {
     public Map<String, Object> pipelineLatencyStats(@RequestParam(required = false) Integer days) {
         Instant since = sinceDays(days);
         return Map.of(
-                "latency", pipelineLatency.averageLatencySince(since),
-                "summaryQuality", trips.summaryQualitySince(since)
+                "latency", since == null ? pipelineLatency.averageLatency() : pipelineLatency.averageLatencySince(since),
+                "summaryQuality", since == null ? trips.summaryQuality() : trips.summaryQualitySince(since)
         );
     }
 

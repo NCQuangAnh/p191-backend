@@ -13,10 +13,13 @@ public interface PipelineLatencyRepository extends JpaRepository<PipelineLatency
     List<PipelineLatencyAgg> averageLatency();
 
     // Ban co "since" - Dashboard web bo chon Hom nay/7 ngay/30 ngay (yeu cau
-    // nguoi dung 24/08). since = null = toan bo thoi gian.
+    // nguoi dung 24/08). KHONG dung "(:since is null or ...)" - Postgres
+    // khong suy duoc kieu tham so $1 luc prepare statement (loi thuc te
+    // 24/08: "could not determine data type of parameter $1", 42P18).
+    // Controller tu re nhanh goi averageLatency() khi since=null.
     @Query("select avg(e.sttMs) as sttMs, avg(e.classifyMs) as classifyMs, " +
             "avg(e.summarizeMs) as summarizeMs, avg(e.ttsMs) as ttsMs, count(e) as sampleCount " +
-            "from PipelineLatencyEvent e where (:since is null or e.receivedAt >= :since)")
+            "from PipelineLatencyEvent e where e.receivedAt >= :since")
     List<PipelineLatencyAgg> averageLatencySince(@Param("since") Instant since);
 
     interface PipelineLatencyAgg {

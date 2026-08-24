@@ -13,11 +13,15 @@ public interface MessageClassificationRepository extends JpaRepository<MessageCl
     List<CategoryAgg> categoryDistribution();
 
     // Ban co "since" - loc theo khung thoi gian (Hom nay/7 ngay/30 ngay tren
-    // Dashboard web, yeu cau nguoi dung 24/08). since = null nghia la khong
-    // loc (toan bo thoi gian, giu nguyen hanh vi cu cho app driver).
+    // Dashboard web, yeu cau nguoi dung 24/08). KHONG dung "(:since is null
+    // or ...)" - Postgres khong suy duoc kieu tham so $1 ngay luc prepare
+    // statement (loi thuc te 24/08: "ERROR: could not determine data type
+    // of parameter $1", 42P18), gay 500 -> lo ra ngoai thanh 403 rong qua
+    // ExceptionTranslationFilter. Controller tu re nhanh goi categoryDistribution()
+    // khi since=null, chi goi ham nay khi since khac null.
     @Query("select c.category as category, count(c) as total, " +
             "sum(case when c.isImportant = true then 1 else 0 end) as importantCount " +
-            "from MessageClassification c where (:since is null or c.receivedAt >= :since) group by c.category order by total desc")
+            "from MessageClassification c where c.receivedAt >= :since group by c.category order by total desc")
     List<CategoryAgg> categoryDistributionSince(@Param("since") Instant since);
 
     // So tin nhan theo tung gio trong ngay, N gio gan nhat - ve bieu do

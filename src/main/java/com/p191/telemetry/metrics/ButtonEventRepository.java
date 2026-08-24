@@ -13,9 +13,12 @@ public interface ButtonEventRepository extends JpaRepository<ButtonEvent, Long> 
     List<ButtonPressAgg> aggregatePresses();
 
     // Ban co "since" - Dashboard web bo chon Hom nay/7 ngay/30 ngay (yeu cau
-    // nguoi dung 24/08). since = null = toan bo thoi gian.
+    // nguoi dung 24/08). KHONG dung "(:since is null or ...)" - Postgres
+    // khong suy duoc kieu tham so $1 luc prepare statement (loi thuc te
+    // 24/08: "could not determine data type of parameter $1", 42P18).
+    // Controller tu re nhanh goi aggregatePresses() khi since=null.
     @Query("select b.buttonCode as code, sum(b.pressCount) as presses " +
-            "from ButtonEvent b where (:since is null or b.receivedAt >= :since) group by b.buttonCode order by b.buttonCode")
+            "from ButtonEvent b where b.receivedAt >= :since group by b.buttonCode order by b.buttonCode")
     List<ButtonPressAgg> aggregatePressesSince(@Param("since") Instant since);
 
     // Tong luot bam theo TUNG may (deviceId) + tung nut - de tinh trung binh

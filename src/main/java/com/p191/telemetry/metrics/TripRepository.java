@@ -19,18 +19,22 @@ public interface TripRepository extends JpaRepository<Trip, String> {   // khoá
     FunnelAgg fleetFunnel();
 
     // Ban co "since" - Dashboard web bo chon Hom nay/7 ngay/30 ngay (yeu cau
-    // nguoi dung 24/08). since = null = toan bo thoi gian.
+    // nguoi dung 24/08). KHONG dung "(:since is null or ...)" - Postgres
+    // khong suy duoc kieu tham so $1 luc prepare statement (loi thuc te
+    // 24/08: "could not determine data type of parameter $1", 42P18).
+    // Controller tu re nhanh goi fleetFunnel() khi since=null.
     @Query("select sum(t.totalIncomingMessages) as totalIncoming, sum(t.declinedListenCount) as declinedListen, " +
             "sum(t.repliedCount) as replied, sum(t.suggestionUsedCount) as suggestionUsed, " +
             "sum(t.composedCount) as composed, sum(t.suggestionEmptyCount) as suggestionEmpty, " +
             "sum(t.clarifyRetryCount) as clarifyRetry, avg(t.avgProcessingMs) as avgProcessingMs " +
-            "from Trip t where (:since is null or t.receivedAt >= :since)")
+            "from Trip t where t.receivedAt >= :since")
     FunnelAgg fleetFunnelSince(@Param("since") Instant since);
 
     // So chuyen (khong gioi han Top50) trong khung thoi gian - dung cho the
     // "Chuyến đi hợp lệ" tren Dashboard web khi loc theo Hom nay/7 ngay/30
-    // ngay (yeu cau nguoi dung 24/08).
-    @Query("select count(t) from Trip t where (:since is null or t.receivedAt >= :since)")
+    // ngay (yeu cau nguoi dung 24/08). Controller tu re nhanh goi count()
+    // (JpaRepository co san) khi since=null.
+    @Query("select count(t) from Trip t where t.receivedAt >= :since")
     long countSince(@Param("since") Instant since);
 
     // Breakdown theo tung channel (Zalo/SMS/Messenger) - cong don tat ca trip.
@@ -46,8 +50,10 @@ public interface TripRepository extends JpaRepository<Trip, String> {   // khoá
             "sum(t.summaryGuardrailBlockedCount) as summaryGuardrailBlocked from Trip t")
     SummaryQualityAgg summaryQuality();
 
+    // Controller tu re nhanh goi summaryQuality() khi since=null (ly do:
+    // xem ghi chu tai countSince()/fleetFunnelSince() o tren).
     @Query("select sum(t.summarySuccessCount) as summarySuccess, sum(t.summaryFallbackCount) as summaryFallback, " +
-            "sum(t.summaryGuardrailBlockedCount) as summaryGuardrailBlocked from Trip t where (:since is null or t.receivedAt >= :since)")
+            "sum(t.summaryGuardrailBlockedCount) as summaryGuardrailBlocked from Trip t where t.receivedAt >= :since")
     SummaryQualityAgg summaryQualitySince(@Param("since") Instant since);
 
     // So chuyen bat dau theo tung gio trong ngay, N gio gan nhat. AT TIME
