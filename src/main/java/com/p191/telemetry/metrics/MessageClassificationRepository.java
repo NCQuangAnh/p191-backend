@@ -12,6 +12,14 @@ public interface MessageClassificationRepository extends JpaRepository<MessageCl
             "from MessageClassification c group by c.category order by total desc")
     List<CategoryAgg> categoryDistribution();
 
+    // Ban co "since" - loc theo khung thoi gian (Hom nay/7 ngay/30 ngay tren
+    // Dashboard web, yeu cau nguoi dung 24/08). since = null nghia la khong
+    // loc (toan bo thoi gian, giu nguyen hanh vi cu cho app driver).
+    @Query("select c.category as category, count(c) as total, " +
+            "sum(case when c.isImportant = true then 1 else 0 end) as importantCount " +
+            "from MessageClassification c where (:since is null or c.receivedAt >= :since) group by c.category order by total desc")
+    List<CategoryAgg> categoryDistributionSince(@Param("since") Instant since);
+
     // So tin nhan theo tung gio trong ngay, N gio gan nhat - ve bieu do
     // "Luu luong tin nhan 24h" (yeu cau nguoi dung 23/08). AT TIME ZONE
     // 'Asia/Ho_Chi_Minh' - received_at luu UTC (Instant.now()), khong doi

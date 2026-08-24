@@ -38,8 +38,21 @@ public class DashboardController {
         return Map.of("activeNow", heartbeats.countActiveDevicesSince(since), "windowMinutes", 5);
     }
 
+    // days=null -> toan bo thoi gian (giu nguyen hanh vi cu). Dashboard web
+    // dung cho bo chon Hom nay(1)/7 ngay/30 ngay (yeu cau nguoi dung 24/08).
+    private static Instant sinceDays(Integer days) {
+        return days == null ? null : Instant.now().minusSeconds(days * 24L * 3600);
+    }
+
     @GetMapping("/trips")
     public List<TripView> trips() { return tripRead.recentTrips(); }
+
+    // So chuyen (khong gioi han Top50) trong khung thoi gian - the "Chuyến
+    // đi hợp lệ" tren Dashboard web (yeu cau nguoi dung 24/08).
+    @GetMapping("/stats/trip-count")
+    public Map<String, Object> tripCount(@RequestParam(required = false) Integer days) {
+        return Map.of("count", trips.countSince(sinceDays(days)));
+    }
 
     @GetMapping("/sos")
     public Map<String, Object> sos() {
@@ -51,7 +64,9 @@ public class DashboardController {
     }
 
     @GetMapping("/stats/buttons")
-    public List<ButtonEventRepository.ButtonPressAgg> buttonStats() { return buttons.aggregatePresses(); }
+    public List<ButtonEventRepository.ButtonPressAgg> buttonStats(@RequestParam(required = false) Integer days) {
+        return buttons.aggregatePressesSince(sinceDays(days));
+    }
 
     // Tach theo tung may (deviceId) - de tinh trung binh moi user dung nut
     // nao bao nhieu lan/ngay (yeu cau nguoi dung 22/08).
@@ -72,8 +87,8 @@ public class DashboardController {
     public List<ErrorEventRepository.ErrorAgg> errorStats() { return errors.aggregate(); }
 
     @GetMapping("/stats/categories")
-    public List<MessageClassificationRepository.CategoryAgg> categoryStats() {
-        return classifications.categoryDistribution();
+    public List<MessageClassificationRepository.CategoryAgg> categoryStats(@RequestParam(required = false) Integer days) {
+        return classifications.categoryDistributionSince(sinceDays(days));
     }
 
     // Danh sach tho de man "Chi tiết nhãn tin nhắn" loc theo ngay + ve pie
@@ -99,9 +114,9 @@ public class DashboardController {
     // don sum(TripView fields) tren toan bo trips + breakdown theo channel
     // (yeu cau nguoi dung 23/08, thay the du lieu mock tripBehavior).
     @GetMapping("/stats/funnel")
-    public Map<String, Object> funnelStats() {
+    public Map<String, Object> funnelStats(@RequestParam(required = false) Integer days) {
         return Map.of(
-                "summary", trips.fleetFunnel(),
+                "summary", trips.fleetFunnelSince(sinceDays(days)),
                 "channels", trips.fleetChannelStats()
         );
     }
@@ -110,10 +125,11 @@ public class DashboardController {
     // du lieu neu app da gui qua POST /api/telemetry/pipeline-latency (yeu
     // cau nguoi dung 23/08, thay the du lieu mock aiQuality).
     @GetMapping("/stats/pipeline-latency")
-    public Map<String, Object> pipelineLatencyStats() {
+    public Map<String, Object> pipelineLatencyStats(@RequestParam(required = false) Integer days) {
+        Instant since = sinceDays(days);
         return Map.of(
-                "latency", pipelineLatency.averageLatency(),
-                "summaryQuality", trips.summaryQuality()
+                "latency", pipelineLatency.averageLatencySince(since),
+                "summaryQuality", trips.summaryQualitySince(since)
         );
     }
 

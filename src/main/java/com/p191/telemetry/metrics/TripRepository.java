@@ -18,6 +18,21 @@ public interface TripRepository extends JpaRepository<Trip, String> {   // khoá
             "from Trip t")
     FunnelAgg fleetFunnel();
 
+    // Ban co "since" - Dashboard web bo chon Hom nay/7 ngay/30 ngay (yeu cau
+    // nguoi dung 24/08). since = null = toan bo thoi gian.
+    @Query("select sum(t.totalIncomingMessages) as totalIncoming, sum(t.declinedListenCount) as declinedListen, " +
+            "sum(t.repliedCount) as replied, sum(t.suggestionUsedCount) as suggestionUsed, " +
+            "sum(t.composedCount) as composed, sum(t.suggestionEmptyCount) as suggestionEmpty, " +
+            "sum(t.clarifyRetryCount) as clarifyRetry, avg(t.avgProcessingMs) as avgProcessingMs " +
+            "from Trip t where (:since is null or t.receivedAt >= :since)")
+    FunnelAgg fleetFunnelSince(@Param("since") Instant since);
+
+    // So chuyen (khong gioi han Top50) trong khung thoi gian - dung cho the
+    // "Chuyến đi hợp lệ" tren Dashboard web khi loc theo Hom nay/7 ngay/30
+    // ngay (yeu cau nguoi dung 24/08).
+    @Query("select count(t) from Trip t where (:since is null or t.receivedAt >= :since)")
+    long countSince(@Param("since") Instant since);
+
     // Breakdown theo tung channel (Zalo/SMS/Messenger) - cong don tat ca trip.
     @Query("select c.channel as channel, sum(c.totalIncomingMessages) as total, " +
             "sum(c.suggestionUsedCount) as used, sum(c.composedCount) as composed, " +
@@ -30,6 +45,10 @@ public interface TripRepository extends JpaRepository<Trip, String> {   // khoá
     @Query("select sum(t.summarySuccessCount) as summarySuccess, sum(t.summaryFallbackCount) as summaryFallback, " +
             "sum(t.summaryGuardrailBlockedCount) as summaryGuardrailBlocked from Trip t")
     SummaryQualityAgg summaryQuality();
+
+    @Query("select sum(t.summarySuccessCount) as summarySuccess, sum(t.summaryFallbackCount) as summaryFallback, " +
+            "sum(t.summaryGuardrailBlockedCount) as summaryGuardrailBlocked from Trip t where (:since is null or t.receivedAt >= :since)")
+    SummaryQualityAgg summaryQualitySince(@Param("since") Instant since);
 
     // So chuyen bat dau theo tung gio trong ngay, N gio gan nhat. AT TIME
     // ZONE 'Asia/Ho_Chi_Minh' - started_at luu UTC, doi ve gio VN truoc khi
