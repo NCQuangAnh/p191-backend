@@ -20,6 +20,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("select count(u) from User u where u.role.name in ('ADMIN', 'SUPER_ADMIN') and u.lastSeenAt >= :since")
     long countAdminsOnlineSince(@Param("since") Instant since);
 
+    @Query("select count(u) from User u where u.role.name in ('ADMIN', 'SUPER_ADMIN')")
+    long countAllAdmins();
+
     @Query("select u from User u where u.role.name in ('ADMIN', 'SUPER_ADMIN') and u.lastSeenAt >= :since order by u.lastSeenAt desc")
     List<User> findAdminsOnlineSince(@Param("since") Instant since);
 }

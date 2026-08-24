@@ -36,7 +36,9 @@ public class AdminUserController {
     @GetMapping("/api/admin/dashboard/stats/admins-online-count")
     public Map<String, Object> onlineCount() {
         Instant since = Instant.now().minusSeconds(ONLINE_WINDOW_SECONDS);
-        return Map.of("count", users.countAdminsOnlineSince(since), "windowMinutes", ONLINE_WINDOW_SECONDS / 60);
+        long online = users.countAdminsOnlineSince(since);
+        long total = users.countAllAdmins();
+        return Map.of("count", online, "total", total, "offline", total - online, "windowMinutes", ONLINE_WINDOW_SECONDS / 60);
     }
 
     // Chi SUPER_ADMIN ("Head Admin") - danh sach TAT CA tai khoan admin
