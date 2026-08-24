@@ -26,14 +26,20 @@ app:
       ttl-seconds: 2592000   # 30 ngay - tang tu 3600 (1 tieng), tranh phai dang nhap lai lien tuc luc test
     # Khóa app khách gửi kèm header X-Api-Key khi ghi heartbeat/event.
     device-api-key: "dev-device-key-doi-o-production"
-  # DataSeeder.java doc key nay (khong phai "app.admin.*" - lech ten khien
-  # tai khoan "admin"/"admin123" truoc day KHONG BAO GIO duoc seed vao DB,
-  # dang nhap luon 401/403 vi user khong ton tai). Set qua env tren
-  # Render (APP_SUPER_ADMIN_USERNAME/APP_SUPER_ADMIN_PASSWORD) o production
-  # thay vi hardcode gia tri that o day.
+  # DataSeeder.java doc key nay. Set qua env tren Render
+  # (APP_SUPER_ADMIN_USERNAME/APP_SUPER_ADMIN_PASSWORD) o production thay vi
+  # hardcode gia tri that o day.
+  #
+  # "superadmin"/"change-me" = SUPER_ADMIN ("Head Admin" tren UI) - vai tro
+  # cao nhat, xem duoc chi tiet admin nao dang online + tao/xoa tai khoan
+  # admin. "admin"/"admin123" = ADMIN thuong, chi thay SO LUONG admin online
+  # (yeu cau nguoi dung 24/08).
   super-admin:
-    username: ${APP_SUPER_ADMIN_USERNAME:admin}
-    password: ${APP_SUPER_ADMIN_PASSWORD:admin123}   # DOI qua env o production
+    username: ${APP_SUPER_ADMIN_USERNAME:superadmin}
+    password: ${APP_SUPER_ADMIN_PASSWORD:change-me}   # DOI qua env o production
+  admin:
+    username: ${APP_ADMIN_USERNAME:admin}
+    password: ${APP_ADMIN_PASSWORD:admin123}          # DOI qua env o production
   device:
     # lastSeen còn trong ngưỡng này (giây) thì coi là online.
     online-threshold-seconds: 120

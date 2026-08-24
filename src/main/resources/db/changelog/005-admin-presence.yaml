@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-admin-presence
+      author: claude
+      changes:
+        # "dang online" cua admin (yeu cau nguoi dung 24/08: "thống kê có bao
+        # nhiêu admin đang online") - cap nhat moi request co JWT hop le
+        # (xem JwtFilter), "online" = last_seen_at trong 5 phut gan nhat.
+        - addColumn:
+            tableName: users
+            columns:
+              - column: {name: last_seen_at, type: "timestamp(6) with time zone"}

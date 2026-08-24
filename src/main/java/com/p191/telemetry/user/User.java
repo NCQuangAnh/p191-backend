@@ -28,6 +28,12 @@ public class User {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
+    // "Admin dang online" (yeu cau nguoi dung 24/08) - cap nhat moi request
+    // co JWT hop le (xem JwtFilter), null = chua tung dang nhap sau khi co
+    // cot nay.
+    @Column(name = "last_seen_at")
+    private Instant lastSeenAt;
+
     // getters/setters (bỏ bớt cho gọn — sinh trong IDE)
     public Long getId() { return id; }
     public String getUsername() { return username; }
@@ -40,4 +46,7 @@ public class User {
     public void setRole(Role r) { this.role = r; }
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean e) { this.enabled = e; }
+    public Instant getCreatedAt() { return createdAt; }
+    public Instant getLastSeenAt() { return lastSeenAt; }
+    public void setLastSeenAt(Instant t) { this.lastSeenAt = t; }
 }
