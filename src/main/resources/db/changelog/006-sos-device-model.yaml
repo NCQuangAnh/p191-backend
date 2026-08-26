@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-sos-device-model
+      author: claude
+      changes:
+        # Man "Chi tiết Lịch sử SOS" (mobile + web) truoc gio chi hien duoc
+        # deviceId (chuoi random tu sinh, vd "drv-hln7qrfoe9") - nguoi dung
+        # muon thay ten dong may that (vd "Samsung Galaxy S24") giong cach
+        # "Loại máy" da lam cho Lịch sử tin nhắn (yeu cau nguoi dung 25/08).
+        - addColumn:
+            tableName: sos_events
+            columns:
+              - column: {name: device_model, type: "varchar(64)"}

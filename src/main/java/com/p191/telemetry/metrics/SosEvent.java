@@ -15,6 +15,7 @@ public class SosEvent {
     @Column(name = "device_id", nullable = false, length = 64) private String deviceId;
     @Column(name = "driver_id", length = 64) private String driverId;
     @Column(name = "app_version", length = 32) private String appVersion;
+    @Column(name = "device_model", length = 64) private String deviceModel;
 
     @Column(name = "triggered_at") private Instant triggeredAt;
     @Column(name = "contacts_sent")  private Integer contactsSent;
@@ -28,7 +29,7 @@ public class SosEvent {
 
     public static SosEvent from(SosRequest r) {
         SosEvent s = new SosEvent();
-        s.deviceId = r.deviceId(); s.driverId = r.driverId(); s.appVersion = r.appVersion();
+        s.deviceId = r.deviceId(); s.driverId = r.driverId(); s.appVersion = r.appVersion(); s.deviceModel = r.deviceModel();
         s.triggeredAt = r.triggeredAt() != null ? r.triggeredAt() : r.timestamp();
         s.contactsSent = r.contactsSent(); s.contactsTotal = r.contactsTotal(); s.success = r.success();
         return s;
@@ -36,6 +37,7 @@ public class SosEvent {
 
     public Long getId() { return id; }
     public String getDeviceId() { return deviceId; }
+    public String getDeviceModel() { return deviceModel; }
     public String getDriverId() { return driverId; }
     public Instant getTriggeredAt() { return triggeredAt; }
     public Integer getContactsSent() { return contactsSent; }
