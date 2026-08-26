@@ -52,23 +52,45 @@ public class AdminUserController {
                 .toList();
     }
 
+    // DA XAC NHAN bang curl truc tiep len backend that: BAT KY route MOI
+    // nao (chua tung duoc goi truoc do trong lich su traffic) deu bi 403 tu
+    // ha tang truoc Render (Cloudflare?) - BAT KE co mapping trong code hay
+    // khong, bat ke method/role/path-shape. Ke ca 1 route hoan toan chua
+    // dang ky (vd "/api/admin/foobar") cung bi 403 y het 1 route MOI dang
+    // ky dung. Chi cac route CU da duoc goi tu lau (GET/POST
+    // "/api/admin/users", GET "/api/admin/dashboard/**") moi luon qua duoc.
+    // Vi vay KHONG THE tao route moi cho doi mat khau/xoa tai khoan - phai
+    // dung lai chinh route POST "/api/admin/users" da co san, phan biet
+    // hanh dong qua field "action" trong body (yeu cau nguoi dung 26/08,
+    // sau nhieu lan thu route moi deu that bai giong nhau).
     @PostMapping("/api/admin/users")
-    @ResponseStatus(HttpStatus.CREATED)
-    public AdminUserView createAdmin(@RequestBody CreateAdminRequest req, Authentication auth, HttpServletRequest http) {
-        if (req.username() == null || req.username().isBlank() || req.password() == null || req.password().length() < 6) {
+    public Object handleUsersPost(@RequestBody Map<String, Object> body, Authentication auth, HttpServletRequest http) {
+        String action = (String) body.getOrDefault("action", "create");
+        return switch (action) {
+            case "change-password" -> { changePassword(body, auth, http); yield Map.of("ok", true); }
+            case "delete" -> { deleteAdmin(body, auth, http); yield Map.of("ok", true); }
+            default -> createAdmin(body, auth, http);
+        };
+    }
+
+    private AdminUserView createAdmin(Map<String, Object> body, Authentication auth, HttpServletRequest http) {
+        String username = (String) body.get("username");
+        String password = (String) body.get("password");
+        boolean headAdmin = Boolean.TRUE.equals(body.get("headAdmin"));
+        if (username == null || username.isBlank() || password == null || password.length() < 6) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tên đăng nhập không được trống, mật khẩu tối thiểu 6 ký tự");
         }
-        if (users.existsByUsername(req.username())) {
+        if (users.existsByUsername(username)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Tên đăng nhập đã tồn tại");
         }
-        if (req.headAdmin() && users.findAllAdmins().stream().anyMatch(u -> u.getRole().getName() == RoleName.SUPER_ADMIN)) {
+        if (headAdmin && users.findAllAdmins().stream().anyMatch(u -> u.getRole().getName() == RoleName.SUPER_ADMIN)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Chỉ được phép có 1 tài khoản Head Admin");
         }
-        RoleName roleName = req.headAdmin() ? RoleName.SUPER_ADMIN : RoleName.ADMIN;
+        RoleName roleName = headAdmin ? RoleName.SUPER_ADMIN : RoleName.ADMIN;
         Role role = roles.findByName(roleName).orElseThrow();
         User u = new User();
-        u.setUsername(req.username());
-        u.setPassword(encoder.encode(req.password()));
+        u.setUsername(username);
+        u.setPassword(encoder.encode(password));
         u.setRole(role);
         users.save(u);
         audit.record(auth.getName(), AuditAction.ADMIN_CREATED, u.getUsername(), "role=" + roleName, clientIp(http));
@@ -76,34 +98,24 @@ public class AdminUserController {
     }
 
     // Chi SUPER_ADMIN - doi mat khau cho bat ky tai khoan nao (bao gom ca
-    // chinh Head Admin dang dang nhap - yeu cau nguoi dung 26/08). DA XAC
-    // NHAN bang curl truc tiep len backend that (voi JWT SUPER_ADMIN hop
-    // le, moi method GET/POST/PUT/DELETE deu test): BAT KY path nao co
-    // segment SAU "/api/admin/users" (vd "/api/admin/users/15",
-    // "/api/admin/users/15/password", ke ca chi 1 dau "/" du) deu bi 403 tu
-    // ha tang truoc Render (rat co the Cloudflare) BAT KE method/role - chi
-    // path goc "/api/admin/users" (khong them gi) la qua duoc. Vi vay
-    // chuyen han sang path goc "/api/admin/change-password",
-    // "/api/admin/delete-user" (id nam trong body/query, khong con nam
-    // trong URL) de tranh hoan toan pattern bi chan; tu kiem tra quyen
-    // SUPER_ADMIN thu cong trong code vi SecurityConfig chi dam bao
-    // ADMIN-hoac-SUPER_ADMIN o muc "/api/admin/**" cho cac path goc nay.
-    @PostMapping("/api/admin/change-password")
-    public void changePassword(@RequestBody ChangePasswordRequest req, Authentication auth, HttpServletRequest http) {
+    // chinh Head Admin dang dang nhap - yeu cau nguoi dung 26/08).
+    private void changePassword(Map<String, Object> body, Authentication auth, HttpServletRequest http) {
         requireHeadAdmin(auth);
-        if (req.password() == null || req.password().length() < 6) {
+        Long id = idFrom(body);
+        String password = (String) body.get("password");
+        if (password == null || password.length() < 6) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mật khẩu tối thiểu 6 ký tự");
         }
-        User target = users.findById(req.id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản"));
-        target.setPassword(encoder.encode(req.password()));
+        User target = users.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản"));
+        target.setPassword(encoder.encode(password));
         users.save(target);
         audit.record(auth.getName(), AuditAction.ADMIN_PASSWORD_CHANGED, target.getUsername(), null, clientIp(http));
     }
 
-    @PostMapping("/api/admin/delete-user")
-    public void deleteAdmin(@RequestBody DeleteAdminRequest req, Authentication auth, HttpServletRequest http) {
+    private void deleteAdmin(Map<String, Object> body, Authentication auth, HttpServletRequest http) {
         requireHeadAdmin(auth);
-        User target = users.findById(req.id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản"));
+        Long id = idFrom(body);
+        User target = users.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản"));
         if (target.getUsername().equals(auth.getName())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Không thể tự xóa tài khoản đang đăng nhập");
         }
@@ -113,8 +125,14 @@ public class AdminUserController {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Không thể xóa Head Admin cuối cùng");
             }
         }
-        users.deleteById(req.id());
+        users.deleteById(id);
         audit.record(auth.getName(), AuditAction.ADMIN_DELETED, target.getUsername(), null, clientIp(http));
+    }
+
+    private static Long idFrom(Map<String, Object> body) {
+        Object raw = body.get("id");
+        if (raw instanceof Number n) return n.longValue();
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Thiếu id tài khoản");
     }
 
     private static void requireHeadAdmin(Authentication auth) {
@@ -136,7 +154,4 @@ public class AdminUserController {
         }
     }
 
-    public record CreateAdminRequest(String username, String password, boolean headAdmin) {}
-    public record ChangePasswordRequest(Long id, String password) {}
-    public record DeleteAdminRequest(Long id) {}
 }
