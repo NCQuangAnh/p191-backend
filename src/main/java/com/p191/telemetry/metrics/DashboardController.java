@@ -125,9 +125,16 @@ public class DashboardController {
     //
     // Dung ZONE_VN cho khop voi chinh mui gio ma 2 query dung khi doi
     // received_at/started_at sang gio dia phuong.
+    // days=null -> mac dinh hom nay (00h VN); days=N -> gop TAT CA tin/chuyen
+    // trong N ngay qua vao CUNG 12 khung gio-trong-ngay (khong phai 12 khung
+    // rieng cho tung ngay) - khop voi bo chon "24 giờ qua"/"30 ngày qua" tren
+    // Dashboard web (yeu cau nguoi dung 25/08: "chọn 30 ngày qua thì mục tần
+    // suất đọc tin nhắn vẫn chỉ hiện 24h qua thôi").
     @GetMapping("/stats/hourly")
-    public Map<String, Object> hourlyStats() {
-        Instant since = LocalDate.now(ZONE_VN).atStartOfDay(ZONE_VN).toInstant();
+    public Map<String, Object> hourlyStats(@RequestParam(required = false) Integer days) {
+        Instant since = days == null
+                ? LocalDate.now(ZONE_VN).atStartOfDay(ZONE_VN).toInstant()
+                : Instant.now().minusSeconds(days * 24L * 3600);
         return Map.of(
                 "messagesByHour", classifications.messagesPerHour(since),
                 "tripsByHour", trips.tripsPerHour(since)
