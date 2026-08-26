@@ -76,8 +76,12 @@ public class AdminUserController {
     }
 
     // Chi SUPER_ADMIN - doi mat khau cho bat ky tai khoan nao (bao gom ca
-    // chinh Head Admin dang dang nhap - yeu cau nguoi dung 26/08).
-    @PutMapping("/api/admin/users/{id}/password")
+    // chinh Head Admin dang dang nhap - yeu cau nguoi dung 26/08). Dung
+    // POST thay vi PUT: da xac nhan bang curl truc tiep len backend that
+    // (voi JWT SUPER_ADMIN hop le) - PUT/DELETE/PATCH luon bi 403 tu ha
+    // tang truoc Render (Cloudflare?) du role dung 100%, trong khi GET/POST
+    // qua binh thuong - khong phai loi code/role/CSRF, chi doi method la het.
+    @PostMapping("/api/admin/users/{id}/password")
     public void changePassword(@PathVariable Long id, @RequestBody ChangePasswordRequest req, Authentication auth, HttpServletRequest http) {
         if (req.password() == null || req.password().length() < 6) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mật khẩu tối thiểu 6 ký tự");
