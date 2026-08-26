@@ -61,6 +61,9 @@ public class AdminUserController {
         if (users.existsByUsername(req.username())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Tên đăng nhập đã tồn tại");
         }
+        if (req.headAdmin() && users.findAllAdmins().stream().anyMatch(u -> u.getRole().getName() == RoleName.SUPER_ADMIN)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Chỉ được phép có 1 tài khoản Head Admin");
+        }
         RoleName roleName = req.headAdmin() ? RoleName.SUPER_ADMIN : RoleName.ADMIN;
         Role role = roles.findByName(roleName).orElseThrow();
         User u = new User();
@@ -70,6 +73,19 @@ public class AdminUserController {
         users.save(u);
         audit.record(auth.getName(), AuditAction.ADMIN_CREATED, u.getUsername(), "role=" + roleName, clientIp(http));
         return AdminUserView.from(u, false);
+    }
+
+    // Chi SUPER_ADMIN - doi mat khau cho bat ky tai khoan nao (bao gom ca
+    // chinh Head Admin dang dang nhap - yeu cau nguoi dung 26/08).
+    @PutMapping("/api/admin/users/{id}/password")
+    public void changePassword(@PathVariable Long id, @RequestBody ChangePasswordRequest req, Authentication auth, HttpServletRequest http) {
+        if (req.password() == null || req.password().length() < 6) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mật khẩu tối thiểu 6 ký tự");
+        }
+        User target = users.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản"));
+        target.setPassword(encoder.encode(req.password()));
+        users.save(target);
+        audit.record(auth.getName(), AuditAction.ADMIN_PASSWORD_CHANGED, target.getUsername(), null, clientIp(http));
     }
 
     @DeleteMapping("/api/admin/users/{id}")
@@ -101,4 +117,5 @@ public class AdminUserController {
     }
 
     public record CreateAdminRequest(String username, String password, boolean headAdmin) {}
+    public record ChangePasswordRequest(String password) {}
 }
