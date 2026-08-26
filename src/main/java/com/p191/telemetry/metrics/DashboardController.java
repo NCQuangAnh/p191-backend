@@ -48,10 +48,16 @@ public class DashboardController {
         return Map.of("activeNow", heartbeats.countActiveDevicesSince(since), "windowMinutes", 5);
     }
 
-    // days=null -> toan bo thoi gian (giu nguyen hanh vi cu). Dashboard web
-    // dung cho bo chon Hom nay(1)/7 ngay/30 ngay (yeu cau nguoi dung 24/08).
+    // days=null -> toan bo thoi gian (giu nguyen hanh vi cu). days=1 ("Hôm
+    // nay"/"24 giờ qua") -> tinh tu 00h HOM NAY gio VN, KHONG PHAI rolling 24
+    // tieng thuc - phai khop CHINH XAC voi hourlyStats() ben duoi, neu khong
+    // 2 con so lech nhau (yeu cau nguoi dung 25/08: "tin nhắn đến" 14 nhung
+    // "tần suất đọc tin nhắn" cong don chi ra 8). days=7/30 van la rolling N
+    // ngay (khong co calendar-week/month ro rang de dung lam moc).
     private static Instant sinceDays(Integer days) {
-        return days == null ? null : Instant.now().minusSeconds(days * 24L * 3600);
+        if (days == null) return null;
+        if (days == 1) return LocalDate.now(ZONE_VN).atStartOfDay(ZONE_VN).toInstant();
+        return Instant.now().minusSeconds(days * 24L * 3600);
     }
 
     @GetMapping("/trips")
