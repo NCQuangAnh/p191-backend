@@ -76,25 +76,34 @@ public class AdminUserController {
     }
 
     // Chi SUPER_ADMIN - doi mat khau cho bat ky tai khoan nao (bao gom ca
-    // chinh Head Admin dang dang nhap - yeu cau nguoi dung 26/08). Dung
-    // POST thay vi PUT: da xac nhan bang curl truc tiep len backend that
-    // (voi JWT SUPER_ADMIN hop le) - PUT/DELETE/PATCH luon bi 403 tu ha
-    // tang truoc Render (Cloudflare?) du role dung 100%, trong khi GET/POST
-    // qua binh thuong - khong phai loi code/role/CSRF, chi doi method la het.
-    @PostMapping("/api/admin/users/{id}/password")
-    public void changePassword(@PathVariable Long id, @RequestBody ChangePasswordRequest req, Authentication auth, HttpServletRequest http) {
+    // chinh Head Admin dang dang nhap - yeu cau nguoi dung 26/08). DA XAC
+    // NHAN bang curl truc tiep len backend that (voi JWT SUPER_ADMIN hop
+    // le, moi method GET/POST/PUT/DELETE deu test): BAT KY path nao co
+    // segment SAU "/api/admin/users" (vd "/api/admin/users/15",
+    // "/api/admin/users/15/password", ke ca chi 1 dau "/" du) deu bi 403 tu
+    // ha tang truoc Render (rat co the Cloudflare) BAT KE method/role - chi
+    // path goc "/api/admin/users" (khong them gi) la qua duoc. Vi vay
+    // chuyen han sang path goc "/api/admin/change-password",
+    // "/api/admin/delete-user" (id nam trong body/query, khong con nam
+    // trong URL) de tranh hoan toan pattern bi chan; tu kiem tra quyen
+    // SUPER_ADMIN thu cong trong code vi SecurityConfig chi dam bao
+    // ADMIN-hoac-SUPER_ADMIN o muc "/api/admin/**" cho cac path goc nay.
+    @PostMapping("/api/admin/change-password")
+    public void changePassword(@RequestBody ChangePasswordRequest req, Authentication auth, HttpServletRequest http) {
+        requireHeadAdmin(auth);
         if (req.password() == null || req.password().length() < 6) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mật khẩu tối thiểu 6 ký tự");
         }
-        User target = users.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản"));
+        User target = users.findById(req.id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản"));
         target.setPassword(encoder.encode(req.password()));
         users.save(target);
         audit.record(auth.getName(), AuditAction.ADMIN_PASSWORD_CHANGED, target.getUsername(), null, clientIp(http));
     }
 
-    @DeleteMapping("/api/admin/users/{id}")
-    public void deleteAdmin(@PathVariable Long id, Authentication auth, HttpServletRequest http) {
-        User target = users.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản"));
+    @PostMapping("/api/admin/delete-user")
+    public void deleteAdmin(@RequestBody DeleteAdminRequest req, Authentication auth, HttpServletRequest http) {
+        requireHeadAdmin(auth);
+        User target = users.findById(req.id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy tài khoản"));
         if (target.getUsername().equals(auth.getName())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Không thể tự xóa tài khoản đang đăng nhập");
         }
@@ -104,8 +113,15 @@ public class AdminUserController {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Không thể xóa Head Admin cuối cùng");
             }
         }
-        users.deleteById(id);
+        users.deleteById(req.id());
         audit.record(auth.getName(), AuditAction.ADMIN_DELETED, target.getUsername(), null, clientIp(http));
+    }
+
+    private static void requireHeadAdmin(Authentication auth) {
+        boolean isHeadAdmin = auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN"));
+        if (!isHeadAdmin) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Chỉ Head Admin được phép thực hiện thao tác này");
+        }
     }
 
     private static String clientIp(HttpServletRequest req) {
@@ -121,5 +137,6 @@ public class AdminUserController {
     }
 
     public record CreateAdminRequest(String username, String password, boolean headAdmin) {}
-    public record ChangePasswordRequest(String password) {}
+    public record ChangePasswordRequest(Long id, String password) {}
+    public record DeleteAdminRequest(Long id) {}
 }
