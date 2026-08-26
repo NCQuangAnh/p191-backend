@@ -2,12 +2,22 @@ package com.p191.telemetry.metrics;
 
 import org.springframework.web.bind.annotation.*;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin/dashboard")
 public class DashboardController {
+
+    /**
+     * Mui gio nghiep vu cua du an. Phai KHOP voi mui gio hard-code trong
+     * MessageClassificationRepository.messagesPerHour va
+     * TripRepository.tripsPerHour - lech nhau thi moc "dau ngay" khong trung
+     * voi cach 2 query xep gio, bieu do se le mot vai khung.
+     */
+    private static final ZoneId ZONE_VN = ZoneId.of("Asia/Ho_Chi_Minh");
 
     private final HeartbeatRepository heartbeats;
     private final TripReadService tripRead;
@@ -104,9 +114,20 @@ public class DashboardController {
     // "Luu luong tin nhan 24h" - so tin + so chuyen theo tung gio, gop tu 2
     // nguon that (message_classifications + trips), khong con mock (yeu cau
     // nguoi dung 23/08).
+    //
+    // Moc bat dau la 00:00 HOM NAY theo gio VN, KHONG phai "24 gio gan nhat"
+    // (Instant.now().minusSeconds(24*3600)) nhu truoc. Ly do: 2 query ben
+    // duoi gom theo GIO TRONG NGAY (extract(hour ...)), nen cua so truot
+    // khien cung 1 khung gio chua du lieu cua CA HAI ngay - vd luc 00:50 thi
+    // khung "0-2h" cong ca 00:50-02:00 hom qua lan 00:00-00:50 hom nay. Nhin
+    // tren bieu do giong nhu du lieu khong bao gio bi xoa di (nguoi dung bao
+    // "ghi 24h nhung thuc ra dang luu all time", 26/08).
+    //
+    // Dung ZONE_VN cho khop voi chinh mui gio ma 2 query dung khi doi
+    // received_at/started_at sang gio dia phuong.
     @GetMapping("/stats/hourly")
     public Map<String, Object> hourlyStats() {
-        Instant since = Instant.now().minusSeconds(24 * 3600);
+        Instant since = LocalDate.now(ZONE_VN).atStartOfDay(ZONE_VN).toInstant();
         return Map.of(
                 "messagesByHour", classifications.messagesPerHour(since),
                 "tripsByHour", trips.tripsPerHour(since)
