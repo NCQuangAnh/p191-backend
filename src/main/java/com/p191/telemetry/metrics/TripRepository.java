@@ -32,10 +32,19 @@ public interface TripRepository extends JpaRepository<Trip, String> {   // khoá
 
     // So chuyen (khong gioi han Top50) trong khung thoi gian - dung cho the
     // "Chuyến đi hợp lệ" tren Dashboard web khi loc theo Hom nay/7 ngay/30
-    // ngay (yeu cau nguoi dung 24/08). Controller tu re nhanh goi count()
-    // (JpaRepository co san) khi since=null.
-    @Query("select count(t) from Trip t where t.receivedAt >= :since")
+    // ngay (yeu cau nguoi dung 24/08). Loc rieng durationMinutes >= 8 NGAY O
+    // DAY (yeu cau nguoi dung 28/08) - truoc day dua vao app CHI gui trip
+    // >= 8 phut nen khong can loc them, nhung tu khi app gui MOI chuyen
+    // (ke ca ngan) de Pheu Phan hoi Tin nhan (fleetFunnel/fleetFunnelSince,
+    // KHONG loc duration - cong don toan bo) khong bi mat du lieu, bang
+    // "Chuyến đi hợp lệ" phai tu loc lay o day de van chi tinh chuyen du dai.
+    @Query("select count(t) from Trip t where t.receivedAt >= :since and t.durationMinutes >= 8")
     long countSince(@Param("since") Instant since);
+
+    // Nhanh khi since=null (xem ghi chu tai countSince() o tren ve ly do
+    // khong con dung JpaRepository.count() co san nua - can loc duration).
+    @Query("select count(t) from Trip t where t.durationMinutes >= 8")
+    long countValid();
 
     // Breakdown theo tung channel (Zalo/SMS/Messenger) - cong don tat ca trip.
     @Query("select c.channel as channel, sum(c.totalIncomingMessages) as total, " +

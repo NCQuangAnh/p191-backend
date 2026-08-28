@@ -68,7 +68,7 @@ public class DashboardController {
     @GetMapping("/stats/trip-count")
     public Map<String, Object> tripCount(@RequestParam(required = false) Integer days) {
         Instant since = sinceDays(days);
-        return Map.of("count", since == null ? trips.count() : trips.countSince(since));
+        return Map.of("count", since == null ? trips.countValid() : trips.countSince(since));
     }
 
     @GetMapping("/sos")
