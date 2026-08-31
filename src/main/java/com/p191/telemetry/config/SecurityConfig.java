@@ -43,6 +43,10 @@ public class SecurityConfig {
                                 "/v3/api-docs/**"
                         ).permitAll()
 
+                        // Health check cho Demo Day / Render uptime monitor - PHAI cong
+                        // khai, khong the doi JWT (uptime bot/BTC khong co token) (them 31/08).
+                        .requestMatchers("/actuator/health").permitAll()
+
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/telemetry/**").permitAll()
                         .requestMatchers("/api/proxy/**").permitAll()
