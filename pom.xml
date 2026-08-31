@@ -45,6 +45,16 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
+        <!-- Structured (JSON) logging - de Render/log aggregator sau nay
+             parse duoc, khong phai text tho. Spring Boot 3.4+ co san
+             logging.structured.format nhung parent dang 3.3.5, dung
+             logstash-logback-encoder + logback-spring.xml thay the. -->
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+            <version>8.0</version>
+        </dependency>
+
         <!-- JWT (jjwt 0.12.x) -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>

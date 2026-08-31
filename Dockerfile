@@ -1,5 +1,8 @@
 # ---- build stage ----
-FROM maven:3.9-eclipse-temurin-21 AS build
+# JDK17 khop voi <java.version>17</java.version> trong pom.xml - ban truoc
+# dung image 21 gay lech, JDK21 van compile duoc code target 17 nhung
+# runtime image nen khop dung version de tranh sai khac hanh vi tinh vi.
+FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /app
 COPY . .
 RUN mvn clean package -DskipTests
@@ -7,7 +10,7 @@ RUN mvn clean package -DskipTests
 # RUN ./gradlew clean bootJar -x test
 
 # ---- run stage ----
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:17-jre
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 # Gradle: COPY --from=build /app/build/libs/*.jar app.jar

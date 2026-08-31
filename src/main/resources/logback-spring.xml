@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Log JSON ra stdout (khong phai text tho) - Render/bat ky log
+    aggregator nao (Datadog, Loki, CloudWatch...) parse duoc truc tiep,
+    khong can regex tach field. them 01/09 cho tieu chi DevOps
+    "Structured logging" trong checklist Demo Day.
+-->
+<configuration>
+    <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <includeMdcKeyName>traceId</includeMdcKeyName>
+            <customFields>{"service":"p191-backend"}</customFields>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="JSON_CONSOLE" />
+    </root>
+</configuration>
