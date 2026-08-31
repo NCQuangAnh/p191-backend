@@ -1,5 +1,14 @@
 # P-191 Telemetry Backend
 
+## 🟢 Đang chạy thật (Live)
+- **API:** https://p191-backend.onrender.com
+- **Health check:** https://p191-backend.onrender.com/actuator/health
+- **Swagger UI:** https://p191-backend.onrender.com/swagger-ui.html
+
+Code trong thư mục này (`p191-backend/`) chính là code đang chạy production ở trên — được đồng bộ 1-1 với repo deploy riêng [`NCQuangAnh/p191-backend`](https://github.com/NCQuangAnh/p191-backend) mà Render theo dõi để tự động build/deploy mỗi khi có commit mới. Repo đó chỉ tồn tại vì Render cần 1 repo riêng để kết nối — toàn bộ source code thật nằm ở đây, trong repo chính `P-191`.
+
+---
+
 Backend telemetry cho app trợ lý lái xe P-191. Một backend, hai chiều tách biệt:
 
 - **GHI (app khách / Guest):** `POST /device/heartbeat`, `POST /event/logEvent` — xác thực bằng `X-Api-Key`, không cần JWT. Backend biết "máy nào" nhờ `deviceId` trong payload.
