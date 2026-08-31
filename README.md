@@ -71,3 +71,4 @@ Override bằng biến môi trường, ví dụ `APP_SECURITY_JWT_SECRET`, `APP_
 
 ## Từ phía Flutter
 Trong các service hiện có (`message_classifier_service.dart`, `stt_pipeline_service.dart`, ...), sau khi xử lý xong 1 tin nhắn thì bắn `POST /event/logEvent` kèm header `X-Api-Key`; và có 1 timer định kỳ gọi `POST /device/heartbeat`.
+
