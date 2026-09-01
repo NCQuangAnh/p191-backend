@@ -1,6 +1,8 @@
 package com.p191.telemetry.proxy;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -25,6 +27,8 @@ import java.time.Duration;
 @RequestMapping("/api/proxy")
 @Tag(name = "Proxy")
 public class ProxyController {
+
+    private static final Logger logger = LoggerFactory.getLogger(ProxyController.class);
 
     private static final HttpClient CLIENT = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(10))
@@ -64,6 +68,7 @@ public class ProxyController {
             var res = CLIENT.send(req, HttpResponse.BodyHandlers.ofString());
             return ResponseEntity.status(res.statusCode()).contentType(MediaType.APPLICATION_JSON).body(res.body());
         } catch (Exception e) {
+            logger.error("Loi forward request toi Google TTS: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body("{\"error\":\"" + e.getMessage() + "\"}");
         }
     }
@@ -84,6 +89,7 @@ public class ProxyController {
             var res = CLIENT.send(req, HttpResponse.BodyHandlers.ofString());
             return ResponseEntity.status(res.statusCode()).contentType(MediaType.APPLICATION_JSON).body(res.body());
         } catch (Exception e) {
+            logger.error("Loi forward request toi Google Places: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body("{\"error\":\"" + e.getMessage() + "\"}");
         }
     }
